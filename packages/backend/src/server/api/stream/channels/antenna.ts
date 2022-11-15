@@ -36,6 +36,8 @@ class AntennaChannel extends Channel {
 			if (isUserRelated(note, this.muting)) return;
 			// 流れてきたNoteがブロックされているユーザーが関わるものだったら無視する
 			if (isUserRelated(note, this.blocking)) return;
+			// 流れてきたNoteがダイレクトで自分が含まれていないものだったら無視する
+			if (note.visibility === 'specified') return;
 
 			this.connection.cacheNote(note);
 

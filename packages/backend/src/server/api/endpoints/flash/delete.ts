@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { FlashsRepository } from '@/models/index.js';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { DI } from '@/di-symbols.js';
+import { RoleService } from '@/core/RoleService.js';
 import { ApiError } from '../../error.js';
 
 export const meta = {
@@ -40,13 +41,14 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 	constructor(
 		@Inject(DI.flashsRepository)
 		private flashsRepository: FlashsRepository,
+		private roleService: RoleService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
 			const flash = await this.flashsRepository.findOneBy({ id: ps.flashId });
 			if (flash == null) {
 				throw new ApiError(meta.errors.noSuchFlash);
 			}
-			if (flash.userId !== me.id) {
+			if (flash.userId !== me.id && !await this.roleService.isModerator(me)) {
 				throw new ApiError(meta.errors.accessDenied);
 			}
 

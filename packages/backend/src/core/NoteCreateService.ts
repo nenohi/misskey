@@ -2,6 +2,7 @@ import { setImmediate } from 'node:timers/promises';
 import * as mfm from 'mfm-js';
 import { In, DataSource } from 'typeorm';
 import * as Redis from 'ioredis';
+import { AhoCorasick } from 'slacc';
 import { Inject, Injectable, OnApplicationShutdown } from '@nestjs/common';
 import RE2 from 're2';
 import { extractMentions } from '@/misc/extract-mentions.js';
@@ -52,6 +53,8 @@ import { SearchService } from '@/core/SearchService.js';
 const mutedWordsCache = new MemorySingleCache<{ userId: UserProfile['userId']; mutedWords: UserProfile['mutedWords']; }[]>(1000 * 60 * 5);
 
 type NotificationType = 'reply' | 'renote' | 'quote' | 'mention';
+
+const acCache = new Map<string, AhoCorasick>();
 
 class NotificationManager {
 	private notifier: { id: User['id']; };
@@ -676,25 +679,43 @@ export class NoteCreateService implements OnApplicationShutdown {
 	@bindThis
 	private isSensitive(note: Option, sensitiveWord: string[]): boolean {
 		if (sensitiveWord.length > 0) {
+			const words = sensitiveWord.map(x => x.split(' '));
 			const text = note.cw ?? note.text ?? '';
 			if (text === '') return false;
-			const matched = sensitiveWord.some(filter => {
-				// represents RegExp
-				const regexp = filter.match(/^\/(.+)\/(.*)$/);
-				// This should never happen due to input sanitisation.
-				if (!regexp) {
-					const words = filter.split(' ');
-					return words.every(keyword => text.includes(keyword));
+
+			const acable = words.filter(filter => Array.isArray(filter) && filter.length === 1).map(filter => filter[0]).sort();
+			const unacable = words.filter(filter => !Array.isArray(filter) || filter.length !== 1);
+			const acCacheKey = acable.join('\n');
+			const ac = acCache.get(acCacheKey) ?? AhoCorasick.withPatterns(acable);
+			acCache.delete(acCacheKey);
+			for (const obsoleteKeys of acCache.keys()) {
+				if (acCache.size > 1000) {
+					acCache.delete(obsoleteKeys);
 				}
-				try {
-					return new RE2(regexp[1], regexp[2]).test(text);
-				} catch (err) {
+			}
+			acCache.set(acCacheKey, ac);
+			if (ac.isMatch(text)) {
+				return true;
+			}
+
+			const matched = unacable.some(filter => {
+				if (Array.isArray(filter)) {
+					return filter.every(keyword => text.includes(keyword));
+				} else {
+					// represents RegExp
+					const regexp = filter.match(/^\/(.+)\/(.*)$/);
+	
 					// This should never happen due to input sanitisation.
-					return false;
+					if (!regexp) return false;
+	
+					try {
+						return new RE2(regexp[1], regexp[2]).test(text);
+					} catch (err) {
+						// This should never happen due to input sanitisation.
+						return false;
+					}
 				}
 			});
-			if (matched) return true;
-		}
 		return false;
 	}
 

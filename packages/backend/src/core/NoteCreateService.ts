@@ -679,7 +679,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 	@bindThis
 	private isSensitive(note: Option, sensitiveWord: string[]): boolean {
 		if (sensitiveWord.length > 0) {
-			const words = sensitiveWord.map(x => x.split(' '));
+			const words:Array<string|string[]> = sensitiveWord.map(x => x.split(' '));
 			const text = note.cw ?? note.text ?? '';
 			if (text === '') return false;
 
@@ -716,6 +716,8 @@ export class NoteCreateService implements OnApplicationShutdown {
 					}
 				}
 			});
+			if (matched) return true;
+		}
 		return false;
 	}
 

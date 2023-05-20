@@ -233,6 +233,7 @@ export function getNoteMenu(props: {
 		const statePromise = os.api('notes/state', {
 			noteId: appearNote.id,
 		});
+		const isChannelOwner = appearNote.channel ? os.api('channels/show', { channelId: appearNote.channel.id }).then(channel => channel!.userId === $i!.id).catch(() => false) : false;
 
 		menu = [
 			...(
@@ -347,7 +348,7 @@ export function getNoteMenu(props: {
 				}]
 			: []
 			),
-			...(appearNote.userId === $i.id || $i.isModerator || $i.isAdmin ? [
+			...(appearNote.userId === $i.id || $i.isModerator || $i.isAdmin || isChannelOwner ? [
 				null,
 				appearNote.userId === $i.id ? {
 					icon: 'ti ti-edit',

@@ -212,7 +212,7 @@ const urls = appearNote.text ? extractUrlFromMfm(mfm.parse(appearNote.text)) : n
 const showTicker = (defaultStore.state.instanceTicker === 'always') || (defaultStore.state.instanceTicker === 'remote' && appearNote.user.instance);
 const conversation = ref<misskey.entities.Note[]>([]);
 const replies = ref<misskey.entities.Note[]>([]);
-const canRenote = computed(() => ['public', 'home'].includes(appearNote.visibility) || appearNote.userId === $i.id);
+const canRenote = computed(() => (['public', 'home'].includes(appearNote.visibility) || appearNote.userId === $i.id) || (appearNote.channel != null && appearNote.channel.isPublic));
 
 const keymap = {
 	'r': () => reply(true),

@@ -264,7 +264,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 			if (ps.channelId != null) {
 				channel = await this.channelsRepository.findOneBy({ id: ps.channelId, isArchived: false });
 
-				if (channel == null) {
+				if (channel == null || !channel.isPublic) {
 					throw new ApiError(meta.errors.noSuchChannel);
 				}
 			}

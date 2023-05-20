@@ -89,4 +89,10 @@ export class Channel {
 		comment: 'The count of users.',
 	})
 	public usersCount: number;
+
+	@Column('boolean', {
+		default: false,
+		comment: 'The flag whether the Channel is Public.',
+	})
+	public isPublic: boolean;
 }

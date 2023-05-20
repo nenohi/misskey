@@ -23,6 +23,9 @@
 				</div>
 			</div>
 
+			<MkSwitch v-model="isPublic">
+				<template #label>{{ i18n.ts._channel.isPublic }}</template>
+			</MkSwitch>
 			<MkFolder :default-open="true">
 				<template #label>{{ i18n.ts.pinnedNotes }}</template>
 				
@@ -61,6 +64,7 @@ import MkTextarea from '@/components/MkTextarea.vue';
 import MkButton from '@/components/MkButton.vue';
 import MkInput from '@/components/MkInput.vue';
 import MkColorInput from '@/components/MkColorInput.vue';
+import MkSwitch from '@/components/MkSwitch.vue';
 import { selectFile } from '@/scripts/select-file';
 import * as os from '@/os';
 import { useRouter } from '@/router';
@@ -82,6 +86,7 @@ let description = $ref(null);
 let bannerUrl = $ref<string | null>(null);
 let bannerId = $ref<string | null>(null);
 let color = $ref('#000');
+let isPublic = $ref(true);
 const pinnedNotes = ref([]);
 
 watch(() => bannerId, async () => {
@@ -137,6 +142,7 @@ function save() {
 		bannerId: bannerId,
 		pinnedNoteIds: pinnedNotes.value.map(x => x.id),
 		color: color,
+		isPublic: isPublic,
 	};
 
 	if (props.channelId) {

@@ -4,15 +4,17 @@ import type { Packed } from '@/misc/json-schema.js';
 import { NoteEntityService } from '@/core/entities/NoteEntityService.js';
 import { bindThis } from '@/decorators.js';
 import Channel from '../channel.js';
+import { ChannelService } from '@/core/ChannelService.js';
 
 class ChannelChannel extends Channel {
 	public readonly chName = 'channel';
 	public static shouldShare = false;
 	public static requireCredential = false;
 	private channelId: string;
-
+	
 	constructor(
 		private noteEntityService: NoteEntityService,
+		private channelService: ChannelService,
 
 		id: string,
 		connection: Channel['connection'],
@@ -53,6 +55,12 @@ class ChannelChannel extends Channel {
 
 		if (note.renote && !note.text && isUserRelated(note, this.userIdsWhoMeMutingRenotes)) return;
 
+		if (note.channelId && !await this.channelService.isPublic(note.channelId)) {
+			if ( this.user === undefined || !await this.channelService.isFolloing(note.channelId, this.user.id)) {
+				return;
+			}
+		}
+
 		this.connection.cacheNote(note);
 
 		this.send('note', note);
@@ -72,6 +80,7 @@ export class ChannelChannelService {
 
 	constructor(
 		private noteEntityService: NoteEntityService,
+		private channelService: ChannelService,
 	) {
 	}
 
@@ -79,6 +88,7 @@ export class ChannelChannelService {
 	public create(id: string, connection: Channel['connection']): ChannelChannel {
 		return new ChannelChannel(
 			this.noteEntityService,
+			this.channelService,
 			id,
 			connection,
 		);

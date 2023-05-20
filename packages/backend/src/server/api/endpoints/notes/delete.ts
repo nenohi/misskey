@@ -7,6 +7,7 @@ import { DI } from '@/di-symbols.js';
 import { GetterService } from '@/server/api/GetterService.js';
 import { RoleService } from '@/core/RoleService.js';
 import { ApiError } from '../../error.js';
+import { ChannelService } from '@/core/ChannelService.js';
 
 export const meta = {
 	tags: ['notes'],
@@ -50,7 +51,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 	constructor(
 		@Inject(DI.usersRepository)
 		private usersRepository: UsersRepository,
-
+		private channelService: ChannelService,
 		private getterService: GetterService,
 		private roleService: RoleService,
 		private noteDeleteService: NoteDeleteService,
@@ -61,7 +62,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 				throw err;
 			});
 
-			if (!await this.roleService.isModerator(me) && (note.userId !== me.id)) {
+			if ((!(await this.roleService.isModerator(me) || (note.channelId !== null && await this.channelService.isOwner(note.channelId, me.id))) && (note.userId !== me.id))) {
 				throw new ApiError(meta.errors.accessDenied);
 			}
 

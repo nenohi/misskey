@@ -2,15 +2,15 @@
 <MkPagination ref="pagingComponent" :pagination="pagination">
 	<template #empty>
 		<div class="_fullinfo">
-			<img src="https://xn--931a.moe/assets/info.jpg" class="_ghost"/>
+			<img :src="infoImageUrl" class="_ghost"/>
 			<div>{{ i18n.ts.noNotifications }}</div>
 		</div>
 	</template>
 
 	<template #default="{ items: notifications }">
-		<MkDateSeparatedList v-slot="{ item: notification }" :class="$style.list" :items="notifications" :no-gap="true">
+		<MkDateSeparatedList v-slot="{ item: notification }" :class="$style.list" :items="notifications" :noGap="true">
 			<MkNote v-if="['reply', 'quote', 'mention'].includes(notification.type)" :key="notification.id" :note="notification.note"/>
-			<XNotification v-else :key="notification.id" :notification="notification" :with-time="true" :full="true" class="_panel notification"/>
+			<XNotification v-else :key="notification.id" :notification="notification" :withTime="true" :full="true" class="_panel notification"/>
 		</MkDateSeparatedList>
 	</template>
 </MkPagination>
@@ -26,6 +26,7 @@ import { useStream } from '@/stream';
 import { $i } from '@/account';
 import { i18n } from '@/i18n';
 import { notificationTypes } from '@/const';
+import { infoImageUrl } from '@/instance';
 
 const props = defineProps<{
 	includeTypes?: typeof notificationTypes[number][];

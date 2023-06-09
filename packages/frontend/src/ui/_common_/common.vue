@@ -10,12 +10,20 @@
 <XUpload v-if="uploads.length > 0"/>
 
 <TransitionGroup
-	tag="div" :class="[$style.notifications, $style[`notificationsPosition-${defaultStore.state.notificationPosition}`], $style[`notificationsStackAxis-${defaultStore.state.notificationStackAxis}`]]"
-	:move-class="defaultStore.state.animation ? $style.transition_notification_move : ''"
-	:enter-active-class="defaultStore.state.animation ? $style.transition_notification_enterActive : ''"
-	:leave-active-class="defaultStore.state.animation ? $style.transition_notification_leaveActive : ''"
-	:enter-from-class="defaultStore.state.animation ? $style.transition_notification_enterFrom : ''"
-	:leave-to-class="defaultStore.state.animation ? $style.transition_notification_leaveTo : ''"
+	tag="div"
+	:class="[$style.notifications, {
+		[$style.notificationsPosition_leftTop]: defaultStore.state.notificationPosition === 'leftTop',
+		[$style.notificationsPosition_leftBottom]: defaultStore.state.notificationPosition === 'leftBottom',
+		[$style.notificationsPosition_rightTop]: defaultStore.state.notificationPosition === 'rightTop',
+		[$style.notificationsPosition_rightBottom]: defaultStore.state.notificationPosition === 'rightBottom',
+		[$style.notificationsStackAxis_vertical]: defaultStore.state.notificationStackAxis === 'vertical',
+		[$style.notificationsStackAxis_horizontal]: defaultStore.state.notificationStackAxis === 'horizontal',
+	}]"
+	:moveClass="defaultStore.state.animation ? $style.transition_notification_move : ''"
+	:enterActiveClass="defaultStore.state.animation ? $style.transition_notification_enterActive : ''"
+	:leaveActiveClass="defaultStore.state.animation ? $style.transition_notification_leaveActive : ''"
+	:enterFromClass="defaultStore.state.animation ? $style.transition_notification_enterFrom : ''"
+	:leaveToClass="defaultStore.state.animation ? $style.transition_notification_leaveTo : ''"
 >
 	<div v-for="notification in notifications" :key="notification.id" :class="$style.notification">
 		<XNotification :notification="notification"/>
@@ -103,31 +111,31 @@ if ($i) {
 	pointer-events: none;
 	display: flex;
 
-	&.notificationsPosition-leftTop {
+	&.notificationsPosition_leftTop {
 		top: var(--margin);
 		left: 0;
 	}
 
-	&.notificationsPosition-rightTop {
+	&.notificationsPosition_rightTop {
 		top: var(--margin);
 		right: 0;
 	}
 
-	&.notificationsPosition-leftBottom {
+	&.notificationsPosition_leftBottom {
 		bottom: calc(var(--minBottomSpacing) + var(--margin));
 		left: 0;
 	}
 
-	&.notificationsPosition-rightBottom {
+	&.notificationsPosition_rightBottom {
 		bottom: calc(var(--minBottomSpacing) + var(--margin));
 		right: 0;
 	}
 
-	&.notificationsStackAxis-vertical {
+	&.notificationsStackAxis_vertical {
 		width: 250px;
 
-		&.notificationsPosition-leftTop,
-		&.notificationsPosition-rightTop {
+		&.notificationsPosition_leftTop,
+		&.notificationsPosition_rightTop {
 			flex-direction: column;
 
 			.notification {
@@ -137,8 +145,8 @@ if ($i) {
 			}
 		}
 
-		&.notificationsPosition-leftBottom,
-		&.notificationsPosition-rightBottom {
+		&.notificationsPosition_leftBottom,
+		&.notificationsPosition_rightBottom {
 			flex-direction: column-reverse;
 
 			.notification {
@@ -149,11 +157,11 @@ if ($i) {
 		}
 	}
 
-	&.notificationsStackAxis-horizontal {
+	&.notificationsStackAxis_horizontal {
 		width: 100%;
 
-		&.notificationsPosition-leftTop,
-		&.notificationsPosition-leftBottom {
+		&.notificationsPosition_leftTop,
+		&.notificationsPosition_leftBottom {
 			flex-direction: row;
 
 			.notification {
@@ -163,8 +171,8 @@ if ($i) {
 			}
 		}
 
-		&.notificationsPosition-rightTop,
-		&.notificationsPosition-rightBottom {
+		&.notificationsPosition_rightTop,
+		&.notificationsPosition_rightBottom {
 			flex-direction: row-reverse;
 
 			.notification {

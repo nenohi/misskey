@@ -1,7 +1,7 @@
 <template>
 <MkStickyContainer>
 	<template #header><MkPageHeader :actions="headerActions" :tabs="headerTabs"/></template>
-	<MkSpacer :content-max="700">
+	<MkSpacer :contentMax="700">
 		<div v-if="channelId == null || channel != null" class="_gaps_m">
 			<MkInput v-model="name">
 				<template #label>{{ i18n.ts.name }}</template>
@@ -26,7 +26,7 @@
 			<MkSwitch v-model="isPublic">
 				<template #label>{{ i18n.ts._channel.isPublic }}</template>
 			</MkSwitch>
-			<MkFolder :default-open="true">
+			<MkFolder :defaultOpen="true">
 				<template #label>{{ i18n.ts.pinnedNotes }}</template>
 				
 				<div class="_gaps">
@@ -34,7 +34,7 @@
 
 					<Sortable 
 						v-model="pinnedNotes"
-						item-key="id"
+						itemKey="id"
 						:handle="'.' + $style.pinnedNoteHandle"
 						:animation="150"
 					>

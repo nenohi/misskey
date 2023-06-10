@@ -9,6 +9,7 @@ import { AttestationChallenge } from '@/models/entities/AttestationChallenge.js'
 import { AuthSession } from '@/models/entities/AuthSession.js';
 import { Blocking } from '@/models/entities/Blocking.js';
 import { ChannelFollowing } from '@/models/entities/ChannelFollowing.js';
+import { ChannelFollowRequest } from '@/models/entities/ChannelFollowRequest.js';
 import { ChannelFavorite } from '@/models/entities/ChannelFavorite.js';
 import { Clip } from '@/models/entities/Clip.js';
 import { ClipNote } from '@/models/entities/ClipNote.js';
@@ -78,6 +79,7 @@ export {
 	AuthSession,
 	Blocking,
 	ChannelFollowing,
+	ChannelFollowRequest,
 	ChannelFavorite,
 	Clip,
 	ClipNote,
@@ -146,6 +148,7 @@ export type AttestationChallengesRepository = Repository<AttestationChallenge>;
 export type AuthSessionsRepository = Repository<AuthSession>;
 export type BlockingsRepository = Repository<Blocking>;
 export type ChannelFollowingsRepository = Repository<ChannelFollowing>;
+export type ChannelFollowRequestsRepository = Repository<ChannelFollowRequest>;
 export type ChannelFavoritesRepository = Repository<ChannelFavorite>;
 export type ClipsRepository = Repository<Clip>;
 export type ClipNotesRepository = Repository<ClipNote>;

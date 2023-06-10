@@ -96,3 +96,5 @@ export class Channel {
 	})
 	public isPublic: boolean;
 }
+
+export type ChannelEntity = Channel;

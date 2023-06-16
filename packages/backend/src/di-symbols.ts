@@ -64,6 +64,8 @@ export const DI = {
 	channelFollowingsRepository: Symbol('channelFollowingsRepository'),
 	channelFollowRequestsRepository: Symbol('channelFollowRequestsRepository'),
 	channelFavoritesRepository: Symbol('channelFavoritesRepository'),
+	channelBlockeeRepository: Symbol('channelBlockeeRepository'),
+	channelBlockerRepository: Symbol('channelBlockerRepository'),
 	registryItemsRepository: Symbol('registryItemsRepository'),
 	webhooksRepository: Symbol('webhooksRepository'),
 	adsRepository: Symbol('adsRepository'),

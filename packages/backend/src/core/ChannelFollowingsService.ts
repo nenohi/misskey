@@ -13,11 +13,12 @@ import { FederatedInstanceService } from '@/core/FederatedInstanceService.js';
 import { WebhookService } from '@/core/WebhookService.js';
 import { NotificationService } from '@/core/NotificationService.js';
 import { DI } from '@/di-symbols.js';
-import type { ChannelFollowRequestsRepository, ChannelsRepository, FollowingsRepository, FollowRequestsRepository, InstancesRepository, UserProfilesRepository, UsersRepository } from '@/models/index.js';
+import type { ChannelBlocker, ChannelBlocking, ChannelFollowRequestsRepository, ChannelsRepository, FollowingsRepository, FollowRequestsRepository, InstancesRepository, UserProfilesRepository, UsersRepository } from '@/models/index.js';
 import { UserEntityService } from '@/core/entities/UserEntityService.js';
 import { ApRendererService } from '@/core/activitypub/ApRendererService.js';
 import { bindThis } from '@/decorators.js';
-import { UserBlockingService } from '@/core/UserBlockingService.js';
+import { ChannelBlockeeervice } from '@/core/ChannelBlockeeService.js';
+import { ChannelBlockerService } from '@/core/ChannelBlockerService.js';
 import { MetaService } from '@/core/MetaService.js';
 import { CacheService } from '@/core/CacheService.js';
 import type { Config } from '@/config.js';
@@ -36,8 +37,9 @@ type Local = LocalUser | {
 type Channel = ChannelEntity;
 
 @Injectable()
-export class UserFollowingService implements OnModuleInit {
-	private userBlockingService: UserBlockingService;
+export class ChannelFollowingsService implements OnModuleInit {
+	private channelBlockeeService: ChannelBlockeeervice;
+	private channelBlockerService: ChannelBlockerService;
 
 	constructor(
 		private moduleRef: ModuleRef,
@@ -80,7 +82,8 @@ export class UserFollowingService implements OnModuleInit {
 	}
 
 	onModuleInit() {
-		this.userBlockingService = this.moduleRef.get('UserBlockingService');
+		this.channelBlockeeService = this.moduleRef.get('ChannelBlockeeService');
+		this.channelBlockerService = this.moduleRef.get('ChannelBlockerService');
 	}
 
 	@bindThis
@@ -92,77 +95,37 @@ export class UserFollowingService implements OnModuleInit {
 
 		// check blocking
 		const [blocking, blocked] = await Promise.all([
-			this.userBlockingService.checkBlocked(follower.id, channel.id),
-			this.userBlockingService.checkBlocked(channel.id, follower.id),
+			this.channelBlockeeService.checkBlocked(follower.id, channel.id),
+			this.channelBlockerService.checkBlocked(channel.id, follower.id),
 		]);
 
-		if (this.userEntityService.isRemoteUser(follower) && blocked) {
-			// リモートフォローを受けてブロックしていた場合は、エラーにするのではなくRejectを送り返しておしまい。
-			const content = this.apRendererService.addContext(this.apRendererService.renderReject(this.apRendererService.renderFollow(follower, followee, requestId), followee));
-			this.queueService.deliver(channel, content, follower.inbox, false);
+		const followeeProfile = await this.channelRepository.findOneByOrFail({ id: channel.id });
+
+
+		// Automatically accept if the follower is an account who has moved and the locked followee had accepted the old account.
+		if (!channel.isPublic) {
+			autoAccept = !!(await this.accountMoveService.validateAlsoKnownAs(
+				follower,
+				(oldSrc, newSrc) => this.channelFollowRequestsRepository.exist({
+					where: {
+						id: channel.id,
+						followerId: newSrc.id,
+					},
+				}),
+				true,
+			));
+		}
+
+		if (channel.isPublic && blocking) {
+			await this.createFollowRequest(follower, channel, requestId);
 			return;
-		} else if (this.userEntityService.isRemoteUser(follower) && blocking) {
-			// リモートフォローを受けてブロックされているはずの場合だったら、ブロック解除しておく。
-			await this.userBlockingService.unblock(follower, channel);
-		} else {
-			// それ以外は単純に例外
-			if (blocking) throw new IdentifiableError('710e8fb0-b8c3-4922-be49-d5d93d8e6a6e', 'blocking');
-			if (blocked) throw new IdentifiableError('3338392a-f764-498d-8855-db939dcf8c48', 'blocked');
 		}
 
-		const followeeProfile = await this.userProfilesRepository.findOneByOrFail({ userId: followee.id });
+		await this.insertFollowingDoc(channel, follower, silent);
 
-		// フォロー対象が鍵アカウントである or
-		// フォロワーがBotであり、フォロー対象がBotからのフォローに慎重である or
-		// フォロワーがローカルユーザーであり、フォロー対象がリモートユーザーである
-		// 上記のいずれかに当てはまる場合はすぐフォローせずにフォローリクエストを発行しておく
-		if (followee.isLocked || (followeeProfile.carefulBot && follower.isBot) || (this.userEntityService.isLocalUser(follower) && this.userEntityService.isRemoteUser(followee))) {
-			let autoAccept = false;
-
-			// 鍵アカウントであっても、既にフォローされていた場合はスルー
-			const following = await this.followingsRepository.findOneBy({
-				followerId: follower.id,
-				followeeId: followee.id,
-			});
-			if (following) {
-				autoAccept = true;
-			}
-
-			// フォローしているユーザーは自動承認オプション
-			if (!autoAccept && (this.userEntityService.isLocalUser(followee) && followeeProfile.autoAcceptFollowed)) {
-				const followed = await this.followingsRepository.findOneBy({
-					followerId: followee.id,
-					followeeId: follower.id,
-				});
-
-				if (followed) autoAccept = true;
-			}
-
-			// Automatically accept if the follower is an account who has moved and the locked followee had accepted the old account.
-			if (followee.isLocked && !autoAccept) {
-				autoAccept = !!(await this.accountMoveService.validateAlsoKnownAs(
-					follower,
-					(oldSrc, newSrc) => this.followingsRepository.exist({
-						where: {
-							followeeId: followee.id,
-							followerId: newSrc.id,
-						},
-					}),
-					true,
-				));
-			}
-
-			if (!autoAccept) {
-				await this.createFollowRequest(follower, followee, requestId);
-				return;
-			}
-		}
-
-		await this.insertFollowingDoc(followee, follower, silent);
-
-		if (this.userEntityService.isRemoteUser(follower) && this.userEntityService.isLocalUser(followee)) {
+		if (this.userEntityService.isRemoteUser(follower) && this.userEntityService.isLocalUser(channel)) {
 			const content = this.apRendererService.addContext(this.apRendererService.renderAccept(this.apRendererService.renderFollow(follower, followee, requestId), followee));
-			this.queueService.deliver(followee, content, follower.inbox, false);
+			this.queueService.deliver(channel, content, follower.inbox, false);
 		}
 	}
 
@@ -174,22 +137,13 @@ export class UserFollowingService implements OnModuleInit {
 		},
 		silent = false,
 	): Promise<void> {
-		if (follower.id === channel.user!.id) return;
-
-		let alreadyFollowed = false as boolean;
-
 		await this.channelFollowRequestsRepository.insert({
 			id: this.idService.genId(),
 			createdAt: new Date(),
 			followerId: follower.id,
 			channelId: channel.id,
 		}).catch(err => {
-			if (isDuplicateKeyValueError(err) && this.userEntityService.isRemoteUser(follower)) {
-				logger.info(`Insert duplicated ignore. ${follower.id} => ${channel.id}`);
-				alreadyFollowed = true;
-			} else {
-				throw err;
-			}
+			throw err;
 		});
 
 		const req = await this.channelFollowRequestsRepository.findOneBy({
@@ -209,12 +163,10 @@ export class UserFollowingService implements OnModuleInit {
 			// });
 		}
 
-		if (alreadyFollowed) return;
-
-		this.globalEventService.publishInternalEvent('follow', { followerId: follower.id, followeeId: followee.id });
+		this.globalEventService.publishInternalEvent('follow', { followerId: follower.id, followeeId: channel.id });
 
 		const [followeeUser, followerUser] = await Promise.all([
-			this.usersRepository.findOneByOrFail({ id: followee.id }),
+			this.channelRepository.findOneByOrFail({ id: channel.id }),
 			this.usersRepository.findOneByOrFail({ id: follower.id }),
 		]);
 
@@ -263,10 +215,6 @@ export class UserFollowingService implements OnModuleInit {
 		silent = false,
 	): Promise<void> {
 		const following = await this.channelFollowRequestsRepository.findOne({
-			relations: {
-				follower: true,
-				channelId: true,
-			},
 			where: {
 				followerId: channel.id,
 				channelId: followee.id,
@@ -279,8 +227,6 @@ export class UserFollowingService implements OnModuleInit {
 		}
 
 		await this.followingsRepository.delete(following.id);
-
-		this.cacheService.userFollowingsCache.refresh(follower.id);
 
 		this.decrementFollowing(following.follower, following.followee);
 
@@ -315,7 +261,7 @@ export class UserFollowingService implements OnModuleInit {
 	@bindThis
 	private async decrementFollowing(
 		follower: User,
-		followee: User,
+		channel: Channel,
 	): Promise<void> {
 		this.globalEventService.publishInternalEvent('unfollow', { followerId: follower.id, followeeId: followee.id });
 
@@ -323,8 +269,7 @@ export class UserFollowingService implements OnModuleInit {
 		if (!follower.movedToUri && !followee.movedToUri) {
 			//#region Decrement following / followers counts
 			await Promise.all([
-				this.usersRepository.decrement({ id: follower.id }, 'followingCount', 1),
-				this.usersRepository.decrement({ id: followee.id }, 'followersCount', 1),
+				this.channelRepository.decrement({ id: channel.id }, 'followersCount', 1),
 			]);
 			//#endregion
 
@@ -389,27 +334,25 @@ export class UserFollowingService implements OnModuleInit {
 		follower: {
 			id: User['id']; host: User['host']; uri: User['host']; inbox: User['inbox']; sharedInbox: User['sharedInbox'];
 		},
-		followee: {
-			id: User['id']; host: User['host']; uri: User['host']; inbox: User['inbox']; sharedInbox: User['sharedInbox'];
-		},
+		channel: Channel,
 		requestId?: string,
 	): Promise<void> {
-		if (follower.id === followee.id) return;
+		if (follower.id === channel.id) return;
 
 		// check blocking
 		const [blocking, blocked] = await Promise.all([
-			this.userBlockingService.checkBlocked(follower.id, followee.id),
-			this.userBlockingService.checkBlocked(followee.id, follower.id),
+			this.channelBlockerService.checkBlocked(channel.id, follower.id),
+			this.channelBlockeeService.checkBlocked(follower.id, channel.id),
 		]);
 
 		if (blocking) throw new Error('blocking');
 		if (blocked) throw new Error('blocked');
 
-		const followRequest = await this.followRequestsRepository.insert({
+		const followRequest = await this.channelFollowRequestsRepository.insert({
 			id: this.idService.genId(),
 			createdAt: new Date(),
 			followerId: follower.id,
-			followeeId: followee.id,
+			channelId: channel.id,
 			requestId,
 
 			// 非正規化

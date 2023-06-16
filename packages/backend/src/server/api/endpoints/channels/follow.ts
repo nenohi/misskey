@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import type { ChannelFollowingsRepository, ChannelsRepository } from '@/models/index.js';
 import { IdService } from '@/core/IdService.js';
+import { ChannelFollowingService } from '@/core/ChannelFollowingService.js';
 import { GlobalEventService } from '@/core/GlobalEventService.js';
 import { DI } from '@/di-symbols.js';
 import { ApiError } from '../../error.js';
@@ -42,6 +43,8 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 		@Inject(DI.channelFollowingsRepository)
 		private channelFollowingsRepository: ChannelFollowingsRepository,
 
+		private channelFollowingService: ChannelFollowingService,
+
 		private idService: IdService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
@@ -52,8 +55,8 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 			if (channel == null) {
 				throw new ApiError(meta.errors.noSuchChannel);
 			}
-
-			await this.channelFollowingsRepository.insert({
+			await this.channelFollowingService.follow(me, channel);
+			await this.channelFollowingRepository.insert({
 				id: this.idService.genId(),
 				createdAt: new Date(),
 				followerId: me.id,

@@ -95,6 +95,12 @@ export class Channel {
 		comment: 'The flag whether the Channel is Public.',
 	})
 	public isPublic: boolean;
+
+	@Column('integer', {
+		default: 0,
+		comment: 'The count of followers.',
+	})
+	public followersCount: number;
 }
 
 export type ChannelEntity = Channel;

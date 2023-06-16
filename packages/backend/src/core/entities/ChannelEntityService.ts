@@ -78,7 +78,7 @@ export class ChannelEntityService {
 			isArchived: channel.isArchived,
 			usersCount: channel.usersCount,
 			notesCount: channel.notesCount,
-
+			host: channel.host,
 			...(me ? {
 				isFollowing: following != null,
 				isFavorited: favorite != null,

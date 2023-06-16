@@ -11,6 +11,8 @@ import { Blocking } from '@/models/entities/Blocking.js';
 import { ChannelFollowing } from '@/models/entities/ChannelFollowing.js';
 import { ChannelFollowRequest } from '@/models/entities/ChannelFollowRequest.js';
 import { ChannelFavorite } from '@/models/entities/ChannelFavorite.js';
+import { ChannelBlockee } from '@/models/entities/ChannelBlockee.js';
+import { ChannelBlocker } from '@/models/entities/ChannelBlocker.js';
 import { Clip } from '@/models/entities/Clip.js';
 import { ClipNote } from '@/models/entities/ClipNote.js';
 import { ClipFavorite } from '@/models/entities/ClipFavorite.js';
@@ -81,6 +83,8 @@ export {
 	ChannelFollowing,
 	ChannelFollowRequest,
 	ChannelFavorite,
+	ChannelBlockee,
+	ChannelBlocker,
 	Clip,
 	ClipNote,
 	ClipFavorite,
@@ -150,6 +154,8 @@ export type BlockingsRepository = Repository<Blocking>;
 export type ChannelFollowingsRepository = Repository<ChannelFollowing>;
 export type ChannelFollowRequestsRepository = Repository<ChannelFollowRequest>;
 export type ChannelFavoritesRepository = Repository<ChannelFavorite>;
+export type ChannelBlockeeRepository = Repository<ChannelBlockee>;
+export type ChannelBlockerRepository = Repository<ChannelBlocker>;
 export type ClipsRepository = Repository<Clip>;
 export type ClipNotesRepository = Repository<ClipNote>;
 export type ClipFavoritesRepository = Repository<ClipFavorite>;

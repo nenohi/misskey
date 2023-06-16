@@ -1,11 +1,11 @@
-import { PrimaryColumn, Entity, Index, JoinColumn, Column, ManyToOne } from 'typeorm';
+import { PrimaryColumn, Entity, Index, Column } from 'typeorm';
 import { id } from '../id.js';
 import { User } from './User.js';
 import { Channel } from './Channel.js';
 
 @Entity()
 @Index(['channelId', 'blockeeId'], { unique: true })
-export class Blocking {
+export class ChannelBlocker {
 	@PrimaryColumn(id())
 	public id: string;
 
@@ -22,22 +22,10 @@ export class Blocking {
 	})
 	public blockeeId: User['id'];
 
-	@ManyToOne(type => User, {
-		onDelete: 'CASCADE',
-	})
-	@JoinColumn()
-	public blockee: User | null;
-
 	@Index()
 	@Column({
 		...id(),
 		comment: 'The blocker channel ID.',
 	})
 	public channelId: Channel['id'];
-
-	@ManyToOne(type => Channel, {
-		onDelete: 'CASCADE',
-	})
-	@JoinColumn()
-	public channel: Channel | null;
 }

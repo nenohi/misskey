@@ -63,11 +63,11 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 					.orWhere('assign.expiresAt > :now', { now: new Date() });
 				}))
 				.innerJoinAndSelect('assign.user', 'user');
-			
+
 			if (ps.userId != null) {
 				query.andWhere('assign.userId = :userId', { userId: ps.userId });
 			}
-			
+
 			const assigns = await query
 				.take(ps.limit)
 				.getMany();

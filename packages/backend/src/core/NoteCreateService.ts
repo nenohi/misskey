@@ -234,9 +234,14 @@ export class NoteCreateService implements OnApplicationShutdown {
 		if (data.createdAt == null) data.createdAt = new Date();
 		if (data.visibility == null) data.visibility = 'public';
 		if (data.localOnly == null) data.localOnly = false;
-		if (data.channel != null) data.visibility = 'public';
-		if (data.channel != null) data.visibleUsers = [];
-		if (data.channel != null) data.localOnly = true;
+		if (data.channel != null) {
+			data.visibility = 'public';
+			data.visibleUsers = [];
+			data.localOnly = true;
+			if ((await this.roleService.getUserPolicies(user.id)).canChannelNote === false){
+				throw new Error('You can not post to channel');
+			}
+		}
 
 		if (data.visibility === 'public' && data.channel == null) {
 			const sensitiveWords = (await this.metaService.fetch()).sensitiveWords;

@@ -1464,6 +1464,7 @@ export interface Locale {
             "gtlAvailable": string;
             "ltlAvailable": string;
             "canPublicNote": string;
+            "canChannelNote": string;
             "canInvite": string;
             "canManageCustomEmojis": string;
             "driveCapacity": string;

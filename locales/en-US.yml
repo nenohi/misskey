@@ -1379,6 +1379,7 @@ _role:
     gtlAvailable: "Can view the global timeline"
     ltlAvailable: "Can view the local timeline"
     canPublicNote: "Can send public notes"
+    canChannelNote: "Can send channel notes"
     canInvite: "Can create instance invite codes"
     canManageCustomEmojis: "Can manage custom emojis"
     driveCapacity: "Drive capacity"

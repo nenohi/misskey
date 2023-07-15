@@ -50,6 +50,10 @@ export const packedChannelSchema = {
 			type: 'boolean',
 			optional: true, nullable: false,
 		},
+		isPublic: {
+			type: 'boolean',
+			optional: true, nullable: false,
+		},
 		userId: {
 			type: 'string',
 			nullable: true, optional: false,
@@ -67,5 +71,9 @@ export const packedChannelSchema = {
 			type: 'string',
 			optional: false, nullable: false,
 		},
+		host: {
+			type: 'string',
+			optional: true, nullable: true,
+		}
 	},
 } as const;

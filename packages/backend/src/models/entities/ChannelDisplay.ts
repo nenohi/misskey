@@ -32,24 +32,13 @@ export class ChannelFollowRequest {
 		...id(),
 		comment: 'The follower user ID.',
 	})
-	public followerId: User['id'];
+	public userId: User['id'];
 
 	@ManyToOne(type => User, {
 		onDelete: 'CASCADE',
 	})
 	@JoinColumn()
-	public follower: User | null;
+	public user: User | null;
 
-	@Column('varchar', {
-		length: 128, nullable: true,
-		comment: 'id of Follow Activity.',
-	})
-	public requestId: string | null;
-
-	@Index()
-	@Column('varchar', {
-		length: 128, nullable: true,
-		comment: 'The host of the User. It will be null if the origin of the user is local.',
-	})
-	public host: string | null;
+	//#endregion
 }

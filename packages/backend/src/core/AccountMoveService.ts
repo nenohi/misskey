@@ -271,9 +271,13 @@ export class AccountMoveService {
 			this.userProfilesRepository.findOneBy({ userId: dst.id }),
 		]);
 		if (!srcuser || !srcprofile || !dstuser || !dstprofile) return;
-		const modnote = `${dstprofile.moderationNote ? dstprofile.moderationNote + '\n' : ''}${srcuser.username}@${srcuser.host} (${srcuser.id}) から移動されました。\n${srcprofile.moderationNote ? srcprofile.moderationNote + '\n' : ''}`;
+		const dstmodnote = `${dstprofile.moderationNote ? dstprofile.moderationNote + '\n' : ''}${srcuser.username}@${srcuser.host} (${srcuser.id}) から移動されました。\n${srcprofile.moderationNote ? srcprofile.moderationNote + '\n' : ''}`;
 		await this.userProfilesRepository.update({ userId: dst.id }, {
-			moderationNote: modnote,
+			moderationNote: dstmodnote,
+		});
+		const srdmodnote = `${srcprofile.moderationNote ? srcprofile.moderationNote + '\n' : ''}${dstuser.username}@${dstuser.host} (${dstuser.id}) に移動しました。\n${dstprofile.moderationNote ? dstprofile.moderationNote + '\n' : ''}`;
+		await this.userProfilesRepository.update({ userId: src.id }, {
+			moderationNote: srdmodnote,
 		});
 	}
 

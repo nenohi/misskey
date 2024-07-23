@@ -10,7 +10,7 @@ import { bindThis } from '@/decorators.js';
 import { DI } from '@/di-symbols.js';
 import type { Config } from '@/config.js';
 import type { MiLocalUser, MiRemoteUser, MiUser } from '@/models/User.js';
-import type { BlockingsRepository, FollowingsRepository, InstancesRepository, MutingsRepository, UserListMembershipsRepository, UsersRepository } from '@/models/_.js';
+import type { BlockingsRepository, FollowingsRepository, InstancesRepository, MutingsRepository, UserListMembershipsRepository, UserProfilesRepository, UsersRepository } from '@/models/_.js';
 import type { RelationshipJobData, ThinUser } from '@/queue/types.js';
 
 import { IdService } from '@/core/IdService.js';
@@ -47,6 +47,9 @@ export class AccountMoveService {
 
 		@Inject(DI.instancesRepository)
 		private instancesRepository: InstancesRepository,
+
+		@Inject(DI.userProfilesRepository)
+		private userProfilesRepository: UserProfilesRepository,
 
 		private userEntityService: UserEntityService,
 		private idService: IdService,
@@ -119,6 +122,7 @@ export class AccountMoveService {
 				this.copyBlocking(src, dst),
 				this.copyMutings(src, dst),
 				this.updateLists(src, dst),
+				this.updateModerationNote(src, dst),
 			]);
 		} catch {
 			/* skip if any error happens */
@@ -254,6 +258,22 @@ export class AccountMoveService {
 				this.queueService.createFollowJob([{ from: { id: proxy.id }, to: { id: dst.id } }]);
 			}
 		}
+	}
+
+	@bindThis
+	private async updateModerationNote(src: ThinUser, dst: MiUser): Promise<void> {
+		const [srcuser, srcprofile] = await Promise.all([
+			this.usersRepository.findOneBy({ id: src.id }),
+			this.userProfilesRepository.findOneBy({ userId: src.id }),
+		]);
+		const [dstuser, dstprofile] = await Promise.all([
+			this.usersRepository.findOneBy({ id: dst.id }),
+			this.userProfilesRepository.findOneBy({ userId: dst.id }),
+		]);
+		if (!srcuser || !srcprofile || !dstuser || !dstprofile) return;
+		await this.userProfilesRepository.update({ userId: dst.id }, {
+			moderationNote: srcprofile.moderationNote,
+		});
 	}
 
 	@bindThis

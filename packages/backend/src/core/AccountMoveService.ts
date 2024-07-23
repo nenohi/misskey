@@ -271,8 +271,9 @@ export class AccountMoveService {
 			this.userProfilesRepository.findOneBy({ userId: dst.id }),
 		]);
 		if (!srcuser || !srcprofile || !dstuser || !dstprofile) return;
+		const modnote = `${dstprofile.moderationNote ? dstprofile.moderationNote + '\n' : ''}${srcuser.username}@${srcuser.host} (${srcuser.id}) から移動されました。\n${srcprofile.moderationNote ? srcprofile.moderationNote + '\n' : ''}`;
 		await this.userProfilesRepository.update({ userId: dst.id }, {
-			moderationNote: srcprofile.moderationNote,
+			moderationNote: modnote,
 		});
 	}
 

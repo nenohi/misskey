@@ -382,8 +382,11 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					throw new ApiError(meta.errors.cannotReplyToInvisibleNote);
 				} else if (reply.visibility === 'specified' && ps.visibility !== 'specified') {
 					throw new ApiError(meta.errors.cannotReplyToSpecifiedVisibilityNoteWithExtendedVisibility);
-				} else if ( me.isBot && reply.user?.isBot ) {
-					throw new ApiError(meta.errors.botToBotReply);
+				} else if ( me.isBot ) {
+					const replayuser = await this.usersRepository.findOneBy({ id: reply.userId });
+					if (replayuser?.isBot) {
+						throw new ApiError(meta.errors.botToBotReply);
+					}
 				}
 
 				// Check blocking

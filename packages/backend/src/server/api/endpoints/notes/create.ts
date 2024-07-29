@@ -141,6 +141,13 @@ export const meta = {
 			code: 'CONTAINS_TOO_MANY_MENTIONS',
 			id: '4de0363a-3046-481b-9b0f-feff3e211025',
 		},
+
+		botToBotReply: {
+			message: 'Cannot reply to a bot with a bot account.',
+			code: 'BOT_TO_BOT_REPLY',
+			id: '66819f28-9525-389d-4b0a-4974363fbbbf',
+		},
+
 	},
 } as const;
 
@@ -375,6 +382,8 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					throw new ApiError(meta.errors.cannotReplyToInvisibleNote);
 				} else if (reply.visibility === 'specified' && ps.visibility !== 'specified') {
 					throw new ApiError(meta.errors.cannotReplyToSpecifiedVisibilityNoteWithExtendedVisibility);
+				} else if ( me.isBot && reply.user?.isBot ) {
+					throw new ApiError(meta.errors.botToBotReply);
 				}
 
 				// Check blocking

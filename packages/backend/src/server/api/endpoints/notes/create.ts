@@ -142,9 +142,9 @@ export const meta = {
 			id: '4de0363a-3046-481b-9b0f-feff3e211025',
 		},
 
-		botToBotReply: {
-			message: 'Cannot reply to a bot with a bot account.',
-			code: 'BOT_TO_BOT_REPLY',
+		replyingToAnotherBot: {
+			message: 'Replying to another bot account is not allowed.',
+			code: 'REPLY_TO_BOT_NOT_ALLOWED',
 			id: '66819f28-9525-389d-4b0a-4974363fbbbf',
 		},
 
@@ -385,7 +385,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				} else if ( me.isBot ) {
 					const replayuser = await this.usersRepository.findOneBy({ id: reply.userId });
 					if (replayuser?.isBot) {
-						throw new ApiError(meta.errors.botToBotReply);
+						throw new ApiError(meta.errors.replyingToAnotherBot);
 					}
 				}
 

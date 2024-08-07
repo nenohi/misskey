@@ -59,9 +59,9 @@ export const meta = {
 			id: 'c4ab57cc-4e41-45e9-bfd9-584f61e35ce0',
 		},
 
-		botToBot: {
-			message: 'Bot to bot follow is not allowed.',
-			code: 'BOT_TO_BOT',
+		followingAnotherBot: {
+			message: 'Following another bot account is not allowed.',
+			code: 'FOLLOWING_BOT_NOT_ALLOWED',
 			id: '9a61d572-4a95-7f6b-b595-2817d42017b0',
 		},
 	},
@@ -107,7 +107,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			});
 
 			if ( me.isBot && followee.isBot ) {
-				throw new ApiError(meta.errors.botToBot);
+				throw new ApiError(meta.errors.followingAnotherBot);
 			}
 
 			try {
